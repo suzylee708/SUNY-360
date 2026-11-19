@@ -27,13 +27,15 @@ button:focus-visible { outline: 3px solid #4C8DFF; outline-offset: 2px; }
 #cam { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
 .cube { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; display: none; }
 .cube.on { display: block; }
-.cube img { position: absolute; left: -513px; top: -513px; width: 1026px; height: 1026px; max-width: none; pointer-events: none; -webkit-user-drag: none; }
-.cube .f { transform: translateZ(-512px); }
-.cube .r { transform: rotateY(-90deg) translateZ(-512px); }
-.cube .b { transform: rotateY(180deg) translateZ(-512px); }
-.cube .l { transform: rotateY(90deg) translateZ(-512px); }
-.cube .u { transform: rotateX(-90deg) translateZ(-512px); }
-.cube .d { transform: rotateX(90deg) translateZ(-512px); }
+/* faces are laid out at 2048 CSS px (the size of the face images) so the browser draws them at full
+   resolution; the view's zoom comes from the perspective, not from this size. 1 px overlap hides seams. */
+.cube img { position: absolute; left: -1025px; top: -1025px; width: 2050px; height: 2050px; max-width: none; pointer-events: none; -webkit-user-drag: none; }
+.cube .f { transform: translateZ(-1024px); }
+.cube .r { transform: rotateY(-90deg) translateZ(-1024px); }
+.cube .b { transform: rotateY(180deg) translateZ(-1024px); }
+.cube .l { transform: rotateY(90deg) translateZ(-1024px); }
+.cube .u { transform: rotateX(-90deg) translateZ(-1024px); }
+.cube .d { transform: rotateX(90deg) translateZ(-1024px); }
 
 /* exposure: dim before Enter, dip between views */
 #shade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }

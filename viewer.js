@@ -49,7 +49,8 @@
     cam.appendChild(c);
     return c;
   });
-  // load a view's six faces; resolves when all are in
+  // Load a view's six faces (resolves when all are in and decoded). Only the view on screen is kept in
+  // the page: the faces are large, and five views at once would use too much memory on a phone.
   function loadView(i) {
     var c = cubes[i];
     if (c.ready) return c.ready;
@@ -58,11 +59,24 @@
         img.onload = img.onerror = function () { res(); };
         img.src = V[i].faces[k];
         if (img.complete) res();
-      });
+      }).then(function () { return img.decode ? img.decode().catch(function () {}) : null; });
     }));
     return c.ready;
   }
-  function preloadRest() { V.forEach(function (_, i) { if (i !== S.index) loadView(i); }); }
+  function unloadView(i) {
+    if (i < 0 || i === S.index) return;
+    var c = cubes[i];
+    c.ready = null;
+    c.imgs.forEach(function (img) { img.onload = img.onerror = null; img.removeAttribute('src'); });
+  }
+  // the other views are only downloaded ahead (into the browser cache), so a change of view is quick
+  function preloadRest() {
+    if (!window.fetch) return;
+    V.forEach(function (v, i) {
+      if (i === S.index) return;
+      v.faces.forEach(function (url) { fetch(url, { cache: 'force-cache' }).catch(function () {}); });
+    });
+  }
 
   /* ---------- drawing ---------- */
   function persp() {
@@ -121,8 +135,10 @@
 
   /* ---------- views ---------- */
   function apply(i) {
-    if (S.index >= 0) cubes[S.index].classList.remove('on');
+    var old = S.index;
+    if (old >= 0) cubes[old].classList.remove('on');
     S.index = i;
+    if (old !== i) unloadView(old);
     cubes[i].classList.add('on');
     var v = V[i];
     S.yaw = v.yaw; S.pitch = v.pitch;
@@ -270,15 +286,18 @@
     card.classList.remove('on');
     bar.classList.remove('on');
     setShade(1, 300);
+    var ready = loadView(START);
     later(320, function () {
-      apply(START);
-      S.fov = fovOf(V[START]) + ZOOM_OUT;
-      setPhase('arrive');
-      render();
-      later(60, function () {
-        setShade(ARRIVE_SHADE, 300);
-        card.classList.add('on');
-        later(320, function () { S.fading = false; });
+      ready.then(function () {
+        apply(START);
+        S.fov = fovOf(V[START]) + ZOOM_OUT;
+        setPhase('arrive');
+        render();
+        later(60, function () {
+          setShade(ARRIVE_SHADE, 300);
+          card.classList.add('on');
+          later(320, function () { S.fading = false; });
+        });
       });
     });
   }
