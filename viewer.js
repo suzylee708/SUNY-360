@@ -164,6 +164,10 @@
   function intro() {
     clearTimers(); stopMotion();
     setPhase('logo');
+    app.classList.remove('looking');
+    logo.style.transition = 'none';
+    logo.style.opacity = 0;
+    card.style.transition = 'none';
     card.classList.remove('on');
     bar.classList.remove('on');
     setTray(false);
@@ -498,6 +502,7 @@
   $('next').addEventListener('click', function () { go((S.index + 1) % V.length); });
   titleBtn.addEventListener('click', function () { if (S.phase === 'inside' && !S.fading) setTray(!S.trayOpen); });
   $('home').addEventListener('click', home);
+  $('replay').addEventListener('click', function () { S.fading = false; intro(); });
   var fsBtn = $('fullscreen');
   if (!(root.requestFullscreen || root.webkitRequestFullscreen) || standalone) fsBtn.hidden = true;
   fsBtn.addEventListener('click', function () {
