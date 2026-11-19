@@ -1,0 +1,158 @@
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Medium.ttf") format("truetype"); font-weight: 400 500; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-SemiBold.ttf") format("truetype"); font-weight: 600 700; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("fonts/SpaceGrotesk-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+
+:root {
+  --ink: #16181A;
+  --muted: #5A6068;
+  --panel: rgba(255, 255, 255, 0.94);
+  --glass: rgba(255, 255, 255, 0.72);
+  --chip: rgba(22, 24, 26, 0.72);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 3px solid #4C8DFF; outline-offset: 2px; }
+
+#app { position: fixed; inset: 0; overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+/* the panorama: a cube of six faces around the eye */
+#stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; perspective-origin: 50% 50%; }
+#stage.dragging { cursor: grabbing; }
+.phase-logo #stage { cursor: default; }
+#cam { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+.cube { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; display: none; }
+.cube.on { display: block; }
+.cube img { position: absolute; left: -513px; top: -513px; width: 1026px; height: 1026px; max-width: none; pointer-events: none; -webkit-user-drag: none; }
+.cube .f { transform: translateZ(-512px); }
+.cube .r { transform: rotateY(-90deg) translateZ(-512px); }
+.cube .b { transform: rotateY(180deg) translateZ(-512px); }
+.cube .l { transform: rotateY(90deg) translateZ(-512px); }
+.cube .u { transform: rotateX(-90deg) translateZ(-512px); }
+.cube .d { transform: rotateX(90deg) translateZ(-512px); }
+
+/* exposure: dim before Enter, dip between views */
+#shade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }
+
+/* hotspots */
+#spots { position: absolute; inset: 0; pointer-events: none; }
+.spot { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; padding: 0; border: none; background: none; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity 200ms ease; will-change: transform; }
+.spot.on { opacity: 1; pointer-events: auto; }
+.spot .dot { width: 40px; height: 40px; border-radius: 50%; background: var(--panel); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 12px rgba(0,0,0,0.22); transition: transform 150ms ease; }
+.spot .dot::after { content: ""; width: 13px; height: 13px; border-radius: 50%; background: var(--ink); }
+.spot .tag { height: 32px; padding: 0 14px; border-radius: 16px; background: var(--panel); display: flex; align-items: center; font-size: 14px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 12px rgba(0,0,0,0.22); transition: transform 150ms ease; }
+.spot:hover .dot, .spot:focus-visible .dot { transform: scale(1.08); }
+.spot:hover .tag, .spot:focus-visible .tag { transform: scale(1.04); }
+
+/* start logo */
+#logo-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+#logo { width: min(320px, 56vmin); height: auto; opacity: 0; transition: opacity 700ms ease-in-out; }
+
+#loading { position: absolute; left: 50%; bottom: calc(48px + var(--safe-b)); width: 28px; height: 28px; margin-left: -14px; opacity: 0; transition: opacity 300ms ease; pointer-events: none; }
+#loading.on { opacity: 1; }
+#loading span { display: block; width: 100%; height: 100%; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.25); border-top-color: #fff; animation: spin 900ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* arrive card */
+#card-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; pointer-events: none; }
+#card { width: min(360px, 100%); background: #fff; border-radius: 28px; padding: 36px; display: flex; flex-direction: column; gap: 28px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); opacity: 0; pointer-events: none; transition: opacity 200ms ease; }
+#card.on { opacity: 1; pointer-events: auto; }
+.card-text { display: flex; flex-direction: column; gap: 10px; }
+#card-top { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+#card-name { margin: 0; font-family: "Space Grotesk", "Inter", sans-serif; font-size: 40px; font-weight: 700; line-height: 1.05; overflow-wrap: anywhere; }
+#card-sub { margin: 0; font-size: 20px; font-weight: 400; line-height: 1.3; color: #3A4048; }
+#card-top:empty, #card-sub:empty { display: none; }
+#enter { height: 60px; border: none; border-radius: 30px; background: var(--ink); color: #fff; font-size: 18px; font-weight: 600; }
+#enter:hover { background: #2A2E33; }
+
+/* bottom bar */
+#bar { position: absolute; left: 50%; bottom: calc(28px + var(--safe-b)); transform: translate(-50%, 16px); width: max-content; max-width: calc(100vw - 24px); background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); border-radius: 36px; padding: 8px; display: flex; align-items: center; gap: 4px; box-shadow: 0 8px 28px rgba(0,0,0,0.18); opacity: 0; pointer-events: none; transition: opacity 300ms ease, transform 300ms ease; }
+#bar.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+/* while you look around (drag or move the phone), the bar fades back so it hides less of the view */
+#app.looking #bar.on:not(:hover) { opacity: 0.35; transition-duration: 500ms; }
+#app.looking .spot.on { opacity: 0.85; }
+#bar .round { flex: none; width: 52px; height: 52px; border: none; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; }
+#bar .round:hover { background: #EEF0F2; }
+#title { min-width: 0; height: 52px; border: none; border-radius: 26px; background: transparent; padding: 0 18px; display: flex; align-items: center; gap: 10px; transition: background 150ms ease; }
+#title:hover, #title[aria-expanded="true"] { background: #EEF0F2; }
+#title-group, #title-count { flex: none; font-size: 13px; font-weight: 500; color: var(--muted); }
+#title-name { min-width: 0; font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#chevron { flex: none; transition: transform 260ms ease; }
+#title[aria-expanded="true"] #chevron { transform: rotate(180deg); }
+
+/* tray of all views */
+#tray { position: absolute; left: 50%; bottom: calc(108px + var(--safe-b)); transform: translate(-50%, 24px); width: max-content; max-width: calc(100vw - 24px); background: rgba(255,255,255,0.96); border-radius: 28px; padding: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); opacity: 0; pointer-events: none; transition: opacity 220ms ease, transform 260ms ease; }
+#tray.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+#tray-list { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#tray-list::-webkit-scrollbar { display: none; }
+.tile { flex: 0 0 152px; border: none; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+.tile img { width: 152px; height: 86px; object-fit: cover; border-radius: 14px; display: block; border: 3px solid transparent; transition: transform 150ms ease; }
+.tile:hover img { transform: scale(1.04); }
+.tile[aria-current="true"] img { border-color: var(--ink); }
+.tile .g { font-size: 12px; font-weight: 500; color: var(--muted); padding: 0 2px; }
+.tile .t { font-size: 14px; font-weight: 600; line-height: 1.25; padding: 0 2px; }
+.tile .g:empty { display: none; }
+
+/* top corner tools and hint */
+#tools { position: absolute; right: 16px; top: calc(16px + var(--safe-t)); display: flex; gap: 8px; opacity: 0; pointer-events: none; transition: opacity 300ms ease; }
+.entered #tools { opacity: 1; pointer-events: auto; }
+.chip { width: 44px; height: 44px; border: none; border-radius: 22px; background: var(--chip); color: #fff; display: flex; align-items: center; justify-content: center; }
+.chip:hover { background: rgba(22,24,26,0.86); }
+.chip[aria-pressed="true"] { background: #fff; color: var(--ink); }
+.chip[hidden] { display: none; }
+#hint { position: absolute; left: 16px; top: calc(16px + var(--safe-t)); height: 44px; border-radius: 22px; background: var(--chip); color: #fff; padding: 0 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 400ms ease; }
+#hint.on { opacity: 1; }
+
+/* phones */
+@media (max-width: 560px) {
+  #card { padding: 28px; gap: 24px; border-radius: 24px; }
+  #card-name { font-size: 34px; }
+  #card-sub { font-size: 18px; }
+  #enter { height: 56px; }
+  #title { padding: 0 12px; gap: 8px; }
+  #title-group { display: none; }
+  #title-name { font-size: 16px; }
+  #bar { bottom: calc(16px + var(--safe-b)); }
+  #tray { bottom: calc(96px + var(--safe-b)); padding: 14px; border-radius: 22px; }
+  .tile { flex-basis: 128px; }
+  .tile img { width: 128px; height: 72px; border-radius: 12px; }
+}
+/* phones held sideways: little height, so everything gets more compact */
+@media (max-height: 500px) {
+  #card-wrap { padding: 12px; }
+  #card { width: min(340px, 100%); padding: 22px 24px; gap: 16px; border-radius: 22px; }
+  .card-text { gap: 6px; }
+  #card-top { font-size: 11px; }
+  #card-name { font-size: 30px; }
+  #card-sub { font-size: 16px; }
+  #enter { height: 48px; border-radius: 24px; font-size: 16px; }
+  #bar { bottom: calc(8px + var(--safe-b)); padding: 3px; gap: 0; border-radius: 24px; }
+  #bar .round { width: 40px; height: 40px; }
+  #bar .round svg { width: 18px; height: 18px; }
+  #title { height: 40px; padding: 0 12px; gap: 6px; border-radius: 20px; }
+  #title-group { display: none; }
+  #title-name { font-size: 14px; }
+  #title-count { font-size: 12px; }
+  #tray { bottom: calc(58px + var(--safe-b)); padding: 12px; border-radius: 20px; }
+  .chip { width: 40px; height: 40px; }
+  .tile { flex-basis: 120px; gap: 6px; }
+  .tile img { width: 120px; height: 68px; border-radius: 12px; }
+  .tile .t { font-size: 13px; }
+  #tools { top: calc(10px + var(--safe-t)); right: calc(10px + env(safe-area-inset-right, 0px)); }
+  #hint { top: calc(10px + var(--safe-t)); left: calc(10px + env(safe-area-inset-left, 0px)); }
+}
+/* a phone held upright: suggest turning it */
+#rotate { display: none; margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
+#ios-tip { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); text-align: center; }
+#ios-tip svg { vertical-align: -2px; }
+#ios-tip[hidden] { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotate { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bar, #tray, #card, .spot, #logo { transition-duration: 1ms !important; }
+}
