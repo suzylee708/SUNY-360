@@ -79,6 +79,16 @@
   }
 
   /* ---------- drawing ---------- */
+  // Face size on screen: the browser draws each face at its CSS size x the pixel ratio, so a face is laid
+  // out at (image size / pixel ratio). On an iPhone (ratio 3) that keeps each face at 2048 px instead of
+  // 6000+, which is what made Safari run out of memory.
+  var FACE_PX = P.facePx || 2048;
+  function sizeFaces() {
+    var dpr = window.devicePixelRatio || 1;
+    var half = Math.max(256, Math.min(FACE_PX, Math.round(FACE_PX / dpr))) / 2;
+    cam.style.setProperty('--h', half + 'px');
+  }
+  sizeFaces();
   function persp() {
     var r = stage.getBoundingClientRect();
     var short = Math.min(r.width, r.height) || 720;
@@ -536,6 +546,6 @@
   $('card-name').textContent = P.name || '';
   $('card-sub').textContent = P.subtitle || '';
   if (P.logo) logo.alt = (P.name || 'Project') + ' logo';
-  window.addEventListener('resize', queueRender);
+  window.addEventListener('resize', function () { sizeFaces(); queueRender(); });
   intro();
 })();

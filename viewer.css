@@ -27,15 +27,17 @@ button:focus-visible { outline: 3px solid #4C8DFF; outline-offset: 2px; }
 #cam { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
 .cube { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; display: none; }
 .cube.on { display: block; }
-/* faces are laid out at 2048 CSS px (the size of the face images) so the browser draws them at full
-   resolution; the view's zoom comes from the perspective, not from this size. 1 px overlap hides seams. */
-.cube img { position: absolute; left: -1025px; top: -1025px; width: 2050px; height: 2050px; max-width: none; pointer-events: none; -webkit-user-drag: none; }
-.cube .f { transform: translateZ(-1024px); }
-.cube .r { transform: rotateY(-90deg) translateZ(-1024px); }
-.cube .b { transform: rotateY(180deg) translateZ(-1024px); }
-.cube .l { transform: rotateY(90deg) translateZ(-1024px); }
-.cube .u { transform: rotateX(-90deg) translateZ(-1024px); }
-.cube .d { transform: rotateX(90deg) translateZ(-1024px); }
+/* --h is half a face in CSS px, set by viewer.js so that a face is drawn at about the size of its image on
+   this screen (2048 px / pixel ratio): sharp on a PC, and light enough for a phone's memory. The view's zoom
+   comes from the perspective, not from this size. The 1 px overlap hides seams. */
+#cam { --h: 512px; }
+.cube img { position: absolute; left: calc(-1 * var(--h) - 1px); top: calc(-1 * var(--h) - 1px); width: calc(2 * var(--h) + 2px); height: calc(2 * var(--h) + 2px); max-width: none; pointer-events: none; -webkit-user-drag: none; }
+.cube .f { transform: translateZ(calc(-1 * var(--h))); }
+.cube .r { transform: rotateY(-90deg) translateZ(calc(-1 * var(--h))); }
+.cube .b { transform: rotateY(180deg) translateZ(calc(-1 * var(--h))); }
+.cube .l { transform: rotateY(90deg) translateZ(calc(-1 * var(--h))); }
+.cube .u { transform: rotateX(-90deg) translateZ(calc(-1 * var(--h))); }
+.cube .d { transform: rotateX(90deg) translateZ(calc(-1 * var(--h))); }
 
 /* exposure: dim before Enter, dip between views */
 #shade { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; }
